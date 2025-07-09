@@ -1,0 +1,372 @@
+﻿@page "/"
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject ISnackbar Snackbar
+
+<PageTitle>Financial Calculator</PageTitle>
+
+<MudGrid Spacing="4">
+    @* COLUMNA IZQUIERDA: PANELES DE DATOS DE ENTRADA *@
+    <MudItem xs="12" md="5">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h5" GutterBottom="true">Investment Data</MudText>
+                <MudTabs Elevation="2" Rounded="true" PanelClass="mt-4">
+                    <MudTabPanel Text="General">
+                        @* Pestaña General: Basada en la primera captura *@
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12">
+                                <MudText>Investment Years</MudText>
+                                <div class="d-flex">
+                                    <MudSlider @bind-Value="Model.General.InvestmentYears" Min="1" Max="50" Class="my-auto" />
+                                    <MudNumericField @bind-Value="Model.General.InvestmentYears" Min="1" Max="50" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:100px;" />
+                                </div>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudText>Monthly Rent</MudText>
+                                <div class="d-flex">
+                                    <MudSlider @bind-Value="Model.General.MonthlyRent" Min="0" Max="5000" Step="50.0" Class="my-auto" />
+                                    <MudNumericField @bind-Value="Model.General.MonthlyRent" Format="C" HideSpinButtons="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:120px;" />
+                                </div>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudText>Annual Rent Growth Rate</MudText>
+                                <div class="d-flex">
+                                    <MudSlider @bind-Value="Model.General.AnnualRentGrowthRate" Min="0.0" Max="10.0" Step="0.01" Class="my-auto" />
+                                    <MudNumericField @bind-Value="Model.General.AnnualRentGrowthRate" Format="F2" Suffix="%" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:120px;" />
+                                </div>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="Model.General.TotalRentExpenses" Label="Total Rent Expenses" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.AttachMoney" Variant="Variant.Outlined" ReadOnly="true" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Real Estate">
+                        @* Pestaña Real Estate: Basada en la segunda captura *@
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12">
+                                <MudText>House Price</MudText>
+                                <MudNumericField @bind-Value="Model.RealEstate.HousePrice" Format="C0" HideSpinButtons="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudText>Down Payment</MudText>
+                                <div class="d-flex">
+                                    <MudSlider @bind-Value="Model.RealEstate.DownPayment" Min="0" Max="@Model.RealEstate.HousePrice" Step="1000.0" Class="my-auto" />
+                                    <MudNumericField @bind-Value="Model.RealEstate.DownPayment" Format="C0" HideSpinButtons="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:120px;" />
+                                </div>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudText>Property Price Growth Rate</MudText>
+                                <div class="d-flex">
+                                    <MudSlider @bind-Value="Model.RealEstate.PropertyPriceGrowthRate" Min="0.0" Max="15.0" Step="0.01" Class="my-auto" />
+                                    <MudNumericField @bind-Value="Model.RealEstate.PropertyPriceGrowthRate" Format="F2" Suffix="%" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:120px;" />
+                                </div>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="Model.RealEstate.EstimatedSalePrice" Label="Estimated Sale Price" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.AttachMoney" Variant="Variant.Outlined" ReadOnly="true" />
+                            </MudItem>
+
+                            <MudItem xs="12">
+                                <MudExpansionPanels>
+                                    <MudExpansionPanel Text="Mortgage">
+                                        <MudText>Mortgage Term (Years)</MudText>
+                                        <div class="d-flex">
+                                            <MudSlider @bind-Value="Model.RealEstate.MortgageTermYears" Min="5" Max="40" Class="my-auto" />
+                                            <MudNumericField @bind-Value="Model.RealEstate.MortgageTermYears" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:100px;" />
+                                        </div>
+                                        <MudText Class="mt-2">Annual Interest Rate</MudText>
+                                        <div class="d-flex">
+                                            <MudSlider @bind-Value="Model.RealEstate.AnnualInterestRate" Min="0.0" Max="10.0" Step="0.01" Class="my-auto" />
+                                            <MudNumericField @bind-Value="Model.RealEstate.AnnualInterestRate" Format="F2" Suffix="%" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:120px;" />
+                                        </div>
+                                        <MudTextField Value="Model.RealEstate.LoanAmount" Label="Loan Amount" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" />
+                                        @* Otros campos calculados del mortgage *@
+                                    </MudExpansionPanel>
+                                    <MudExpansionPanel Text="Costs">
+                                        <MudText>Buying Costs</MudText>
+                                        <div class="d-flex">
+                                            <MudSlider @bind-Value="Model.RealEstate.BuyingCostsPercentage" Min="0.0" Max="20.0" Step="0.1" Class="my-auto" />
+                                            <MudNumericField @bind-Value="Model.RealEstate.BuyingCostsPercentage" Format="F2" Suffix="%" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:120px;" />
+                                        </div>
+                                        <MudText Class="mt-2">Selling Costs</MudText>
+                                        <div class="d-flex">
+                                            <MudSlider @bind-Value="Model.RealEstate.SellingCostsPercentage" Min="0.0" Max="20.0" Step="0.1" Class="my-auto" />
+                                            <MudNumericField @bind-Value="Model.RealEstate.SellingCostsPercentage" Format="F2" Suffix="%" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:120px;" />
+                                        </div>
+                                    </MudExpansionPanel>
+                                </MudExpansionPanels>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Equity">
+                        @* Pestaña Equity (Stock Market): Basada en la cuarta captura *@
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12">
+                                <MudText>Initial Investment Amount</MudText>
+                                <MudNumericField @bind-Value="Model.Equity.InitialInvestmentAmount" Format="C0" HideSpinButtons="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                <MudCheckBox @bind-Value="Model.Equity.LinkToDownPayment" Label="Link to Down Payment" Color="Color.Primary" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudText>Annual Stock Market Growth Rate</MudText>
+                                <div class="d-flex">
+                                    <MudSlider @bind-Value="Model.Equity.AnnualGrowthRate" Min="0.0" Max="20.0" Step="0.1" Class="my-auto" />
+                                    <MudNumericField @bind-Value="Model.Equity.AnnualGrowthRate" Format="F2" Suffix="%" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width:120px;" />
+                                </div>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="Model.Equity.PortfolioValue" Label="Portfolio Value" ReadOnly="true" Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="Model.Equity.CapitalGainsTax" Label="Capital Gains Tax From Portfolio Sale" ReadOnly="true" Variant="Variant.Outlined" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                </MudTabs>
+
+                @* Botones de Acción *@
+                <MudCardActions Class="mt-4">
+                    <MudButton OnClick="SaveState" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save">Guardar Configuración</MudButton>
+                    <MudButton OnClick="ResetState" Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">Resetear</MudButton>
+                </MudCardActions>
+
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @* COLUMNA DERECHA: PANELES DE RESULTADOS *@
+    <MudItem xs="12" md="7">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h5">Investment Period Summary</MudText>
+
+                <MudText Typo="Typo.subtitle1" Class="mt-4">Difference in Net Profit</MudText>
+                <MudText Typo="Typo.h4" Color="Color.Error">@Results.DifferenceInNetProfit.ToString( "C0" )</MudText>
+
+                <MudText Typo="Typo.subtitle1" Class="mt-6">Comparison of Balances Over the Years</MudText>
+                @* Placeholder para el gráfico. Deberás poblar 'ChartSeries' en CalculateResults() *@
+                <MudChart ChartType="ChartType.Bar" ChartSeries="@ChartSeries" XAxisLabels="@ChartXAxisLabels" Height="250px" />
+
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard Class="mt-4">
+            <MudCardHeader>
+                <CardHeaderContent><MudText Typo="Typo.h6">Real Estate Investment</MudText></CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudTextField @bind-Value="@Results.RealEstate.NetProfitFromSale" Label="Net Profit from House Sale" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField @bind-Value="@Results.RealEstate.AverageMonthlyCashFlow" Label="Average Monthly Cash Flow" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+                    </MudItem>
+                </MudGrid>
+                <MudExpansionPanels Class="mt-2">
+                    <MudExpansionPanel Text="Final Balance Calculation Breakdown">
+                        <MudText>Aquí iría el desglose detallado de los cálculos...</MudText>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard Class="mt-4">
+            <MudCardHeader>
+                <CardHeaderContent><MudText Typo="Typo.h6">Stock Market Investment</MudText></CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudTextField @bind-Value="@Results.StockMarket.NetProfitFromSale" Label="Net Profit from Stock Sale" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField @bind-Value="@Results.StockMarket.AverageMonthlyCashFlow" Label="Average Monthly Cash Flow" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+                    </MudItem>
+                </MudGrid>
+                <MudExpansionPanels Class="mt-2">
+                    <MudExpansionPanel Text="Final Balance Calculation Breakdown">
+                        <MudText>Aquí iría el desglose detallado de los cálculos...</MudText>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard Class="mt-4">
+            <MudCardHeader>
+                <CardHeaderContent><MudText Typo="Typo.h6">Living House Purchase</MudText></CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudTextField @bind-Value="@Results.LivingHouse.NetProfitFromSale" Label="Net Profit from Residential Property Sale" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField @bind-Value="@Results.LivingHouse.AverageMonthlyCashFlow" Label="Average Monthly Cash Flow" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" />
+                    </MudItem>
+                </MudGrid>
+                <MudExpansionPanels Class="mt-2">
+                    <MudExpansionPanel Text="Final Balance Calculation Breakdown">
+                        <MudText>Aquí iría el desglose detallado de los cálculos...</MudText>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            </MudCardContent>
+        </MudCard>
+
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    private const string LocalStorageKey = "financialCalculatorState";
+
+    // ==================================================
+    // 1. MODELO DE DATOS
+    // Clases que almacenan todos los valores de los inputs
+    // ==================================================
+    private CalculatorModel Model { get; set; } = new();
+    private CalculationResults Results { get; set; } = new();
+
+    // Datos para el gráfico
+    private List<ChartSeries> ChartSeries { get; set; } = new();
+    private string[] ChartXAxisLabels { get; set; } = Array.Empty<string>();
+
+    public class CalculatorModel
+    {
+        public GeneralTab General { get; set; } = new();
+        public RealEstateTab RealEstate { get; set; } = new();
+        public EquityTab Equity { get; set; } = new();
+    }
+
+    public class GeneralTab
+    {
+        public int InvestmentYears { get; set; } = 30;
+        public double MonthlyRent { get; set; } = 456;
+        public double AnnualRentGrowthRate { get; set; } = 0.0;
+        public decimal TotalRentExpenses { get; set; } = 164160;
+    }
+
+    public class RealEstateTab
+    {
+        public double DownPayment { get; set; } = 50000;
+        public double HousePrice { get; set; } = 250000;
+        public double PropertyPriceGrowthRate { get; set; } = 3.00;
+        public decimal EstimatedSalePrice { get; set; } = 614211;
+        public int MortgageTermYears { get; set; } = 30;
+        public double AnnualInterestRate { get; set; } = 2.50;
+        public decimal LoanAmount => (decimal)(HousePrice - DownPayment); // Campo calculado
+        public double BuyingCostsPercentage { get; set; } = 10.0;
+        public double SellingCostsPercentage { get; set; } = 10.0;
+    }
+
+    public class EquityTab
+    {
+        public double InitialInvestmentAmount { get; set; } = 50000;
+        public bool LinkToDownPayment { get; set; } = false;
+        public double AnnualGrowthRate { get; set; } = 7.00;
+        public decimal PortfolioValue { get; set; } = 380613;
+        public decimal CapitalGainsTax { get; set; } = 82653;
+    }
+
+    public class CalculationResults
+    {
+        public decimal DifferenceInNetProfit { get; set; } = -145343;
+        public ResultSection RealEstate { get; set; } = new() { NetProfitFromSale = 279142, AverageMonthlyCashFlow = -1246 };
+        public ResultSection StockMarket { get; set; } = new() { NetProfitFromSale = 133800, AverageMonthlyCashFlow = -456 };
+        public ResultSection LivingHouse { get; set; } = new() { NetProfitFromSale = 443302, AverageMonthlyCashFlow = -790 };
+    }
+
+    public class ResultSection
+    {
+        public decimal NetProfitFromSale { get; set; }
+        public decimal AverageMonthlyCashFlow { get; set; }
+    }
+
+
+    // ==================================================
+    // 2. LÓGICA DEL COMPONENTE
+    // Métodos para Cargar, Guardar y Calcular
+    // ==================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadState();
+    }
+
+    private async Task SaveState()
+    {
+        await localStorage.SetItemAsync( LocalStorageKey, Model );
+        Snackbar.Add( "Configuración guardada en el navegador!", Severity.Success );
+        CalculateResults(); // Recalcular al guardar
+    }
+
+    private async Task LoadState()
+    {
+        try
+        {
+            var savedState = await localStorage.GetItemAsync<CalculatorModel>( LocalStorageKey );
+            if ( savedState != null )
+            {
+                Model = savedState;
+                Snackbar.Add( "Configuración cargada desde el navegador.", Severity.Info );
+            }
+            else
+            {
+                // Si no hay nada guardado, nos quedamos con los valores por defecto.
+                Snackbar.Add( "No se encontró configuración previa. Usando valores por defecto.", Severity.Info );
+            }
+        }
+        catch ( Exception ex )
+        {
+            Snackbar.Add( $"Error al cargar la configuración: {ex.Message}", Severity.Error );
+        }
+        finally
+        {
+            CalculateResults(); // Calcular con los datos cargados o por defecto
+            StateHasChanged();
+        }
+    }
+
+    private async Task ResetState()
+    {
+        await localStorage.RemoveItemAsync( LocalStorageKey );
+        Model = new CalculatorModel(); // Restablece el modelo a los valores por defecto
+        Snackbar.Add( "Configuración reseteada a los valores por defecto.", Severity.Warning );
+        CalculateResults(); // Recalcular
+    }
+
+    // Este método se ejecutará cada vez que se carguen o guarden los datos.
+    // Para una actualización en tiempo real, deberías llamarlo con @oninput en los campos del formulario.
+    private void CalculateResults()
+    {
+        // ==================================================
+        // !! LÓGICA DE CÁLCULO - POR IMPLEMENTAR !!
+        // ==================================================
+        // Aquí es donde debes añadir todas tus fórmulas financieras.
+        // Los valores actuales son solo placeholders tomados de la captura de pantalla.
+
+        // Ejemplo de cálculo simple:
+        if ( Model.Equity.LinkToDownPayment )
+        {
+            Model.Equity.InitialInvestmentAmount = Model.RealEstate.DownPayment;
+        }
+
+        // TODO: Implementar el cálculo de todos los campos en la sección 'Results'.
+        // Por ejemplo: Results.RealEstate.NetProfitFromSale = ...
+
+        // TODO: Poblar los datos del gráfico.
+        // Esto es un ejemplo de cómo podrías hacerlo.
+        ChartXAxisLabels = Enumerable.Range( 1, Model.General.InvestmentYears ).Select( i => i.ToString() ).ToArray();
+        ChartSeries.Clear();
+        ChartSeries.Add( new ChartSeries { Name = "Portfolio Net Proceeds", Data = new double[Model.General.InvestmentYears] } );
+        ChartSeries.Add( new ChartSeries { Name = "Investment Property Net Proceeds", Data = new double[Model.General.InvestmentYears] } );
+        ChartSeries.Add( new ChartSeries { Name = "Residential Property Proceeds", Data = new double[Model.General.InvestmentYears] } );
+
+        // Hay que rellenar los 'Data' arrays con los resultados de tus cálculos año por año.
+        // Ejemplo con datos aleatorios para visualización:
+        var rand = new Random();
+        ChartSeries[0].Data = Enumerable.Range( 1, Model.General.InvestmentYears ).Select( i => rand.Next( 100, 500 ) * (double)i ).ToArray();
+        ChartSeries[1].Data = Enumerable.Range( 1, Model.General.InvestmentYears ).Select( i => rand.Next( 100, 500 ) * (double)i ).ToArray();
+        ChartSeries[2].Data = Enumerable.Range( 1, Model.General.InvestmentYears ).Select( i => rand.Next( 100, 500 ) * (double)i ).ToArray();
+    }
+}
